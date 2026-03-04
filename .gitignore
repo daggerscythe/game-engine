@@ -1,0 +1,20 @@
+# Visual Studio cahce/build files
+.vs/
+*.suo
+*.user
+
+# Build output
+x64/
+Debug/
+Release/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.dll
+*.idb
+*.tlog
+*.recipe
+*.log
+*.lastbuildstate
+*.items.tlog
