@@ -1,6 +1,6 @@
 #include "Model.h"
 
-Model::Model(char* path) 
+Model::Model(const char* path) 
 {
 	m_loadModel(path);
 }

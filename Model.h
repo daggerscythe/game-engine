@@ -19,7 +19,7 @@ unsigned int textureFromFile(const char* path, const string& directory, bool gam
 class Model
 {
 public: 
-	Model(char* path);
+	Model(const char* path);
 	void Draw(Shader& shader);
 private:
 	vector<Mesh> m_meshes;

@@ -1,0 +1,67 @@
+#include "InputSystem.h"
+#include <GLFW/glfw3.h>
+
+void InputSystem::Init(GLFWwindow* window) {
+	m_window = window;
+}
+
+void InputSystem::Update(EntityManager& entityManager, float deltaTime) {
+	
+	// get the player entites (only entities with inputcomponent)
+	auto entities = entityManager.GetEntitiesWith<InputComponent>();
+
+	for (EntityID entity : entities) {
+		InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
+
+		// reset input state from last frame
+		input.moveForward = false;
+		input.moveBackward = false;
+		input.moveLeft = false;
+		input.moveRight = false;
+		input.mouseDeltaX = 0.0f;
+		input.mouseDeltaY = 0.0f;
+		input.scrollDelta = 0.0f;
+
+		// write current keyboard state
+		if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) input.moveForward = true;
+		if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) input.moveBackward = true;
+		if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) input.moveLeft= true;
+		if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) input.moveRight = true;
+
+		// esc to close
+		if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(m_window, true);
+	}
+}
+
+void InputSystem::ProcessMouseMovement(EntityManager& entityManager, float xpos, float ypos) {
+	if (m_firstMouse) {
+		int width, height;
+		glfwGetWindowSize(m_window, &width, &height);
+		m_lastX = width / 2.0f;
+		m_lastY = height / 2.0f;
+		m_firstMouse = false;
+	}
+
+	float xoffset = xpos - m_lastX;
+	float yoffset = m_lastY - ypos; // reversed because y goes bottom to top in opengl
+
+	m_lastX = xpos;
+	m_lastY = ypos;
+
+	// get all player entities
+	auto entities = entityManager.GetEntitiesWith<InputComponent>();
+	for (EntityID entity : entities) {
+		InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
+		input.mouseDeltaX = xoffset;
+		input.mouseDeltaY = yoffset;
+	}
+}
+
+void InputSystem::ProcessScroll(EntityManager& entityManager, float yoffset) {
+	// get all player entities
+	auto entities = entityManager.GetEntitiesWith<InputComponent>();
+	for (EntityID entity : entities) {
+		InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
+		input.scrollDelta = yoffset;
+	}
+}
