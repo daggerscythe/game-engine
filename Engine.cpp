@@ -28,17 +28,12 @@ void Engine::Run() {
 		m_deltaTime = currentFrame - m_lastFrame;
 		m_lastFrame = currentFrame;
 
-		// check and call events
-		glfwPollEvents();
-
-		// update all logic systems
-		m_update(m_deltaTime);
-
-		// render
-		m_render();
-
-		// swap buffers
-		glfwSwapBuffers(m_window);
+		
+		glfwPollEvents(); // check and call events
+		m_update(m_deltaTime); // update all logic systems
+		m_render(); // render
+		m_inputSystem.Flush(m_entityManager); // clear input
+		glfwSwapBuffers(m_window); // swap buffers
 	}
 }
 
@@ -98,12 +93,43 @@ void Engine::m_initScene() {
 	m_entityManager.AddComponent<TransformComponent>(player, TransformComponent{});
 	m_entityManager.AddComponent<CameraComponent>(player, CameraComponent{});
 	m_entityManager.AddComponent<InputComponent>(player, InputComponent{});
-	m_entityManager.AddComponent<TagComponent>(player, TagComponent{"Player"});
+	m_entityManager.AddComponent<TagComponent>(player, TagComponent{ "Player" });
+
+	// sun entity - directional light
+	EntityID sun = m_entityManager.CreateEntity();
+	m_entityManager.AddComponent<TransformComponent>(sun, TransformComponent{});
+	LightComponent sunComp{};
+	sunComp.type = LightComponent::Type::Directional;
+	sunComp.direction = glm::vec3(-0.2f, -1.0f, -0.3f);
+	sunComp.ambient = glm::vec3(0.3f);
+	sunComp.diffuse = glm::vec3(0.8f);
+	sunComp.specular = glm::vec3(0.5f);
+	m_entityManager.AddComponent<LightComponent>(sun, sunComp);
+	m_entityManager.AddComponent<TagComponent>(sun, TagComponent{ "Sun" });
+
+	// flashlight entity - attached to player
+	EntityID flashlight = m_entityManager.CreateEntity();
+	m_entityManager.AddComponent<TransformComponent>(flashlight, TransformComponent{});
+	LightComponent flashlightComp{};
+	flashlightComp.type = LightComponent::Type::Spot;
+	flashlightComp.innerCutOff = 12.5f;
+	flashlightComp.outerCutOff = 15.0f;
+	flashlightComp.ambient = glm::vec3(0.0f);
+	flashlightComp.diffuse = glm::vec3(1.0f);
+	flashlightComp.specular = glm::vec3(1.0f);
+	m_entityManager.AddComponent<LightComponent>(flashlight, flashlightComp);
+	m_entityManager.AddComponent<TagComponent>(flashlight, TagComponent{ "Flashlight" });
 
 	// backpack entity
 	EntityID backpack = m_entityManager.CreateEntity();
-	m_entityManager.AddComponent<TransformComponent>(backpack, TransformComponent{});
-	m_entityManager.AddComponent<RenderComponent>(backpack, RenderComponent{ 1, 1, 0, true });
+	TransformComponent backpackTransform{};
+	backpackTransform.position = glm::vec3(0.0f, 0.0f, -3.0f);
+	RenderComponent backpackRender{};
+	backpackRender.meshID = 1;
+	backpackRender.shaderID = 1;
+	backpackRender.isVisible = true;
+	m_entityManager.AddComponent<TransformComponent>(backpack, backpackTransform);
+	m_entityManager.AddComponent<RenderComponent>(backpack, backpackRender);
 }
 
 void Engine::m_update(float deltaTime) {

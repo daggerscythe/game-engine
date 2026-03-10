@@ -34,7 +34,7 @@ private:
 	// internal methods
 	void m_updateCamera(EntityManager& entityManager, float deltatTime);
 	void m_setLightUniforms(EntityManager& entityManager, Shader& shader);
-	void m_drawEntities(EntityManager& entityManager);
+	void m_drawEntities(EntityManager& entityManager, const glm::vec3& cameraPos);
 	void m_updateCameraVectors(CameraComponent& camera);
 	
 	glm::mat4 m_view = glm::mat4(1.0f);

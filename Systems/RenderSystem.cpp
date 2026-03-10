@@ -25,7 +25,11 @@ void RenderSystem::LoadShader(uint32_t id, const std::string& vertexPath, const 
 
 void RenderSystem::Update(EntityManager& entityManager, float deltaTime) {
 	m_updateCamera(entityManager, deltaTime);
-	m_drawEntities(entityManager);
+
+	glm::vec3 cameraPos = glm::vec3(0.0f);
+	auto cameras = entityManager.GetEntitiesWith<CameraComponent>();
+	if (!cameras.empty()) cameraPos = entityManager.GetComponent<CameraComponent>(cameras[0]).position;
+	m_drawEntities(entityManager, cameraPos);
 }
 
 void RenderSystem::Shutdown() {
@@ -77,6 +81,18 @@ void RenderSystem::m_updateCamera(EntityManager& entityManager, float deltaTime)
 			0.1f,
 			100.0f
 		);
+
+		// update flashlight position and direction to match camera
+		auto flashlights = entityManager.GetEntitiesWith<LightComponent, TagComponent>();
+		for (EntityID flashlight: flashlights) {
+			TagComponent& tag = entityManager.GetComponent<TagComponent>(flashlight);
+			if (tag.tag == "Flashlight") {
+				TransformComponent& ftc = entityManager.GetComponent<TransformComponent>(flashlight);
+				LightComponent& lc = entityManager.GetComponent<LightComponent>(flashlight);
+				ftc.position = camera.position;
+				lc.direction = camera.front;
+			}
+		}
 	}
 }
 
@@ -106,7 +122,6 @@ void RenderSystem::m_setLightUniforms(EntityManager& entityManager, Shader& shad
 			shader.setVec3(base + ".specular", lc.specular);
 			shader.setFloat(base + ".constant", lc.constant);
 			shader.setFloat(base + ".linear", lc.linear);
-			shader.setFloat(base + ".linear", lc.linear);
 			shader.setFloat(base + ".quadratic", lc.quadratic);
 			pointLightIndex++;
 		}
@@ -123,10 +138,10 @@ void RenderSystem::m_setLightUniforms(EntityManager& entityManager, Shader& shad
 			shader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(lc.outerCutOff)));
 		}
 	}
-	shader.setInt("numPointLigths", pointLightIndex);
+	shader.setInt("numPointLights", pointLightIndex);
 }
 
-void RenderSystem::m_drawEntities(EntityManager& entityManager) {
+void RenderSystem::m_drawEntities(EntityManager& entityManager, const glm::vec3& cameraPos) {
 	auto entities = entityManager.GetEntitiesWith<RenderComponent, TransformComponent>();
 
 	for (EntityID entity : entities) {
@@ -144,18 +159,23 @@ void RenderSystem::m_drawEntities(EntityManager& entityManager) {
 
 		shader.use();
 
-		// set matrices
-		shader.setMat4("view", m_view);
-		shader.setMat4("projection", m_projection);
-
-		// build & set model matrix
+		// build model matrix
 		glm::mat4 m_model = glm::mat4(1.0f);
 		m_model = glm::translate(m_model, tc.position);
 		m_model = glm::rotate(m_model, glm::radians(tc.rotation.x), glm::vec3(1, 0, 0));
 		m_model = glm::rotate(m_model, glm::radians(tc.rotation.y), glm::vec3(0, 1, 0));
 		m_model = glm::rotate(m_model, glm::radians(tc.rotation.z), glm::vec3(0, 0, 1));
-		m_model - glm::scale(m_model, tc.scale);
+		m_model = glm::scale(m_model, tc.scale);
+
+		// set matrices
+		shader.setMat4("view", m_view);
+		shader.setMat4("projection", m_projection);
 		shader.setMat4("model", m_model);
+
+		// camera nad lighting globals
+		shader.setVec3("viewPos", cameraPos);
+		shader.setFloat("shininess", 32.0f);
+		shader.setBool("flashlight", true);
 
 		// set light unifroms
 		m_setLightUniforms(entityManager, shader);

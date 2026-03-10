@@ -88,8 +88,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ObjectVertexShader.glsl" />
-    <None Include="ObjectFragmentShader.glsl" />
     <None Include="LightingFragmentShader.glsl" />
     <None Include="LightingVertexShader.glsl" />
     <None Include="ModelVertexShader.glsl" />

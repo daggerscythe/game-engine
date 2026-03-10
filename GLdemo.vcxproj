@@ -190,9 +190,7 @@
     <None Include="LightingVertexShader.glsl" />
     <None Include="ModelFragmentShader.glsl" />
     <None Include="ModelVertexShader.glsl" />
-    <None Include="ObjectFragmentShader.glsl" />
     <None Include="LightingFragmentShader.glsl" />
-    <None Include="ObjectVertexShader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

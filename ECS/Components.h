@@ -37,7 +37,7 @@ struct LightComponent {
 	glm::vec3 ambient;
 	glm::vec3 diffuse;
 	glm::vec3 specular;
-	glm::vec3 direction = glm::vec3(-0.2f, -1.0f, -0.3f); // for directional and spot
+	glm::vec3 direction = glm::vec3(0.0f); // for directional and spot
 
 	// attentuation (point & spot)
 	float constant = 1.0f;

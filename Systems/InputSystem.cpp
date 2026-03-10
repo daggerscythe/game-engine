@@ -1,6 +1,8 @@
 #include "InputSystem.h"
 #include <GLFW/glfw3.h>
 
+#include <iostream>
+
 void InputSystem::Init(GLFWwindow* window) {
 	m_window = window;
 }
@@ -13,23 +15,24 @@ void InputSystem::Update(EntityManager& entityManager, float deltaTime) {
 	for (EntityID entity : entities) {
 		InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
 
-		// reset input state from last frame
-		input.moveForward = false;
-		input.moveBackward = false;
-		input.moveLeft = false;
-		input.moveRight = false;
-		input.mouseDeltaX = 0.0f;
-		input.mouseDeltaY = 0.0f;
-		input.scrollDelta = 0.0f;
-
 		// write current keyboard state
-		if (glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) input.moveForward = true;
-		if (glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) input.moveBackward = true;
-		if (glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS) input.moveLeft= true;
-		if (glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS) input.moveRight = true;
+		input.moveForward = glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS;
+		input.moveBackward = glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS;
+		input.moveLeft = glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS;
+		input.moveRight = glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS;
 
 		// esc to close
 		if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(m_window, true);
+	}
+}
+
+void InputSystem::Flush(EntityManager& entityManager) {
+	auto entities = entityManager.GetEntitiesWith<InputComponent>();
+	for (EntityID entity : entities) {
+		InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
+		input.mouseDeltaX = 0.0f;
+		input.mouseDeltaY = 0.0f;
+		input.scrollDelta = 0.0f;
 	}
 }
 

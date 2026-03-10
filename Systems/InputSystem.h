@@ -8,6 +8,7 @@ class InputSystem {
 public:
 	void Init(GLFWwindow* window);
 	void Update(EntityManager& entityManager, float deltaTime);
+	void Flush(EntityManager& entityManager);
 	void ProcessMouseMovement(EntityManager& entityManager, float xpos, float ypos);
 	void ProcessScroll(EntityManager& entityManager, float yoffset);
 	
