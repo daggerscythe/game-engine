@@ -20,6 +20,7 @@ void InputSystem::Update(EntityManager& entityManager, float deltaTime) {
 		input.moveBackward = glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS;
 		input.moveLeft = glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS;
 		input.moveRight = glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS;
+		input.resetBall = glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS;
 
 		// esc to close
 		if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(m_window, true);

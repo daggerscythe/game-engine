@@ -121,15 +121,31 @@ void Engine::m_initScene() {
 	m_entityManager.AddComponent<TagComponent>(flashlight, TagComponent{ "Flashlight" });
 
 	// backpack entity
-	EntityID backpack = m_entityManager.CreateEntity();
-	TransformComponent backpackTransform{};
-	backpackTransform.position = glm::vec3(0.0f, 0.0f, -3.0f);
-	RenderComponent backpackRender{};
-	backpackRender.meshID = 1;
-	backpackRender.shaderID = 1;
-	backpackRender.isVisible = true;
-	m_entityManager.AddComponent<TransformComponent>(backpack, backpackTransform);
-	m_entityManager.AddComponent<RenderComponent>(backpack, backpackRender);
+	//EntityID backpack = m_entityManager.CreateEntity();
+	//TransformComponent backpackTransform{};
+	//backpackTransform.position = glm::vec3(0.0f, 0.0f, -3.0f);
+	//RenderComponent backpackRender{};
+	//backpackRender.meshID = 1;
+	//backpackRender.shaderID = 1;
+	//backpackRender.isVisible = true;
+	//m_entityManager.AddComponent<TransformComponent>(backpack, backpackTransform);
+	//m_entityManager.AddComponent<RenderComponent>(backpack, backpackRender);
+
+	// ball entity
+	EntityID ball = m_entityManager.CreateEntity();
+	TransformComponent ballTransform{};
+	ballTransform.position = glm::vec3(0.0f, 5.0f, -3.0f);
+	m_entityManager.AddComponent<TransformComponent>(ball, ballTransform);
+	RigidBodyComponent ballRB{};
+	ballRB.mass = 1.0f;
+	ballRB.isStatic = false;
+	ballRB.restitution = 0.8f;
+	m_entityManager.AddComponent<RigidBodyComponent>(ball, ballRB);
+	RenderComponent ballRender{};
+	ballRender.meshID = 1;
+	ballRender.shaderID = 1;
+	ballRender.isVisible = true;
+	m_entityManager.AddComponent<RenderComponent>(ball, ballRender);
 }
 
 void Engine::m_update(float deltaTime) {
