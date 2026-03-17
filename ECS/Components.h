@@ -24,6 +24,11 @@ struct ColliderComponent {
 	glm::vec3 offset = glm::vec3(0.0f); // offset from transform pos
 };
 
+struct SpawnpointComponent {
+	glm::vec3 spawnpoint = glm::vec3(0.0f, 0.0f, -3.0f);
+	bool reset = false;
+};
+
 struct RenderComponent {
 	uint32_t meshID = 0;
 	uint32_t textureID = 0;
@@ -79,7 +84,6 @@ struct InputComponent {
 	bool moveBackward = false;
 	bool moveLeft = false;
 	bool moveRight = false;
-	bool resetBall = false; // to test physics
 
 	float mouseDeltaX = 0.0f;
 	float mouseDeltaY = 0.0f;

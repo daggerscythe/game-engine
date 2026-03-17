@@ -95,7 +95,7 @@ void Engine::m_initScene() {
 	m_entityManager.AddComponent<InputComponent>(player, InputComponent{});
 	m_entityManager.AddComponent<TagComponent>(player, TagComponent{ "Player" });
 
-	// sun entity - directional light
+	// sun - directional light
 	EntityID sun = m_entityManager.CreateEntity();
 	m_entityManager.AddComponent<TransformComponent>(sun, TransformComponent{});
 	LightComponent sunComp{};
@@ -107,7 +107,7 @@ void Engine::m_initScene() {
 	m_entityManager.AddComponent<LightComponent>(sun, sunComp);
 	m_entityManager.AddComponent<TagComponent>(sun, TagComponent{ "Sun" });
 
-	// flashlight entity - attached to player
+	// flashlight - attached to player
 	EntityID flashlight = m_entityManager.CreateEntity();
 	m_entityManager.AddComponent<TransformComponent>(flashlight, TransformComponent{});
 	LightComponent flashlightComp{};
@@ -120,7 +120,21 @@ void Engine::m_initScene() {
 	m_entityManager.AddComponent<LightComponent>(flashlight, flashlightComp);
 	m_entityManager.AddComponent<TagComponent>(flashlight, TagComponent{ "Flashlight" });
 
-	// backpack entity
+	// floor 
+	EntityID floor = m_entityManager.CreateEntity();
+	TransformComponent floorTransform{};
+	floorTransform.position = glm::vec3(0.0f, -2.0f, -3.0f);
+	floorTransform.scale = glm::vec3(10.0f, 0.1f, 10.0f);
+	m_entityManager.AddComponent<TransformComponent>(floor, floorTransform);
+	RigidBodyComponent floorRB{};
+	floorRB.isStatic = true;
+	m_entityManager.AddComponent<RigidBodyComponent>(floor, floorRB);
+	ColliderComponent floorCollider{};
+	floorCollider.shape = ColliderComponent::Shape::AABB;
+	floorCollider.size = glm::vec3(10.0f, 0.1f, 10.0f);
+	m_entityManager.AddComponent<ColliderComponent>(floor, floorCollider);
+
+	// backpack 
 	//EntityID backpack = m_entityManager.CreateEntity();
 	//TransformComponent backpackTransform{};
 	//backpackTransform.position = glm::vec3(0.0f, 0.0f, -3.0f);
@@ -131,21 +145,26 @@ void Engine::m_initScene() {
 	//m_entityManager.AddComponent<TransformComponent>(backpack, backpackTransform);
 	//m_entityManager.AddComponent<RenderComponent>(backpack, backpackRender);
 
-	// ball entity
+	// ball 
 	EntityID ball = m_entityManager.CreateEntity();
 	TransformComponent ballTransform{};
 	ballTransform.position = glm::vec3(0.0f, 5.0f, -3.0f);
 	m_entityManager.AddComponent<TransformComponent>(ball, ballTransform);
 	RigidBodyComponent ballRB{};
-	ballRB.mass = 1.0f;
+	ballRB.mass = 2.0f;
 	ballRB.isStatic = false;
 	ballRB.restitution = 0.8f;
 	m_entityManager.AddComponent<RigidBodyComponent>(ball, ballRB);
+	ColliderComponent ballCollider{};
+	ballCollider.shape = ColliderComponent::Shape::Sphere;
+	ballCollider.size = glm::vec3(0.5f);
+	m_entityManager.AddComponent<ColliderComponent>(ball, ballCollider);
 	RenderComponent ballRender{};
 	ballRender.meshID = 1;
 	ballRender.shaderID = 1;
 	ballRender.isVisible = true;
 	m_entityManager.AddComponent<RenderComponent>(ball, ballRender);
+	m_entityManager.AddComponent<SpawnpointComponent>(ball, SpawnpointComponent{glm::vec3(0.0f, 5.0f, -3.0f), false});
 }
 
 void Engine::m_update(float deltaTime) {

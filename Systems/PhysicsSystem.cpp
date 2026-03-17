@@ -1,4 +1,5 @@
 #include "PhysicsSystem.h"
+#include <iostream>
 
 void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 	// TODO: implement SpawnPoints and remove this later
@@ -20,11 +21,14 @@ void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 		rbc.velocity += rbc.acceleration * deltaTime;
 
 		// integrate position
-		if (input.resetBall) {
-			tc.position = glm::vec3(0.0f, 5.0f, -3.0f);
+		tc.position += rbc.velocity * deltaTime;
+
+		// check for spawnpoint reset
+		if (entityManager.HasComponent<SpawnpointComponent>(entity) && entityManager.GetComponent<SpawnpointComponent>(entity).reset) {
+			tc.position = entityManager.GetComponent<SpawnpointComponent>(entity).spawnpoint;
 			rbc.velocity = glm::vec3(0.0f);
 			rbc.acceleration = glm::vec3(0.0f);
+			entityManager.GetComponent<SpawnpointComponent>(entity).reset = false;
 		}
-		tc.position += rbc.velocity * deltaTime;
 	}
 }
