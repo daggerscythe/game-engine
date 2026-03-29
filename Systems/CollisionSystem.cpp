@@ -49,6 +49,8 @@ void CollisionSystem::Update(EntityManager& entityManager) {
 			RigidBodyComponent& rbcA = aHasRB ? entityManager.GetComponent<RigidBodyComponent>(a) : staticRB;
 			RigidBodyComponent& rbcB = bHasRB ? entityManager.GetComponent<RigidBodyComponent>(b) : staticRB;
 
+			// DEBUG
+			std::cout << "DEBUG: Resolving collision between " << entities[i] << " and " << entities[j] << std::endl;
 			m_resolveCollision(rbcA, tcA, rbcB, tcB, info);
 		}
 	}

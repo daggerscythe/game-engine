@@ -11,10 +11,15 @@ Engine::Engine() : m_window(nullptr) {
         std::cerr << "Failed to initialize window" << std::endl;
         return;
     }
-    m_initScene();
+
+	// DEBUG
+	std::cout << "DEBUG: Created Engine instance" << std::endl;
 }
 
 Engine::~Engine() {
+	m_renderSystem.Shutdown();
+	m_audioSystem.Shutdown();
+
     if (m_window) {
         glfwDestroyWindow(m_window);
     }
@@ -22,6 +27,11 @@ Engine::~Engine() {
 }
 
 void Engine::Run() {
+	// DEBUG
+	std::cout << "DEBUG: Running Engine..." << std::endl;
+
+	m_initScene();
+
 	while (!glfwWindowShouldClose(m_window)) {
 		// pre-frame logic
 		float currentFrame = static_cast<float>(glfwGetTime());
@@ -38,6 +48,9 @@ void Engine::Run() {
 }
 
 bool Engine::m_initWindow() {
+	// DEBUG
+	std::cout << "DEBUG: Initializing Window...." << std::endl;
+
 	glfwInit();
 
 	// configuring GLFW for version 3.3
@@ -77,15 +90,31 @@ bool Engine::m_initWindow() {
 	// flip loaded textures
 	stbi_set_flip_vertically_on_load(true);
 
+	// initialize audio system
+	m_audioSystem.Init();
+	// DEBUG
+	std::cout << "DEBUG: Initialized Audio System" << std::endl;
+
 	// pass in reference to the input system
 	m_inputSystem.Init(m_window);
+	// DEBUG
+	std::cout << "DEBUG: Initialized Input System" << std::endl;
+
 	return true;
 }
 
 void Engine::m_initScene() {
+	// DEBUG
+	std::cout << "DEBUG: Initializing Scene..." << std::endl;
+
 	// initialize render system
 	m_renderSystem.Init(SCR_WIDTH, SCR_HEIGHT);
+	// DEBUG
+	std::cout << "DEBUG: Initialized Render System" << std::endl;
+
+	// load shaders and models
 	m_renderSystem.LoadShader(1, "ModelVertexShader.glsl", "ModelFragmentShader.glsl");
+	m_renderSystem.LoadShader(2, "LightingVertexShader.glsl", "LightingFragmentShader.glsl");
 	m_renderSystem.LoadModel(1, "models/backpack/backpack.obj");
 
 	// create player entity
@@ -94,6 +123,9 @@ void Engine::m_initScene() {
 	m_entityManager.AddComponent<CameraComponent>(player, CameraComponent{});
 	m_entityManager.AddComponent<InputComponent>(player, InputComponent{});
 	m_entityManager.AddComponent<TagComponent>(player, TagComponent{ "Player" });
+
+	// DEBUG
+	std::cout << "DEBUG: Created Player entity" << std::endl;
 
 	// sun - directional light
 	EntityID sun = m_entityManager.CreateEntity();
@@ -106,6 +138,9 @@ void Engine::m_initScene() {
 	sunComp.specular = glm::vec3(0.5f);
 	m_entityManager.AddComponent<LightComponent>(sun, sunComp);
 	m_entityManager.AddComponent<TagComponent>(sun, TagComponent{ "Sun" });
+
+	// DEBUG
+	std::cout << "DEBUG: Created Sun entity" << std::endl;
 
 	// flashlight - attached to player
 	EntityID flashlight = m_entityManager.CreateEntity();
@@ -120,6 +155,9 @@ void Engine::m_initScene() {
 	m_entityManager.AddComponent<LightComponent>(flashlight, flashlightComp);
 	m_entityManager.AddComponent<TagComponent>(flashlight, TagComponent{ "Flashlight" });
 
+	// DEBUG
+	std::cout << "DEBUG: Created Flashlight entity" << std::endl;
+
 	// floor 
 	EntityID floor = m_entityManager.CreateEntity();
 	TransformComponent floorTransform{};
@@ -133,6 +171,14 @@ void Engine::m_initScene() {
 	floorCollider.shape = ColliderComponent::Shape::AABB;
 	floorCollider.size = glm::vec3(10.0f, 0.1f, 10.0f);
 	m_entityManager.AddComponent<ColliderComponent>(floor, floorCollider);
+	RenderComponent floorRender{};
+	floorRender.meshID = 1;
+	floorRender.shaderID = 2;
+	floorRender.isVisible = true;
+	m_entityManager.AddComponent<RenderComponent>(floor, floorRender);
+
+	// DEBUG
+	std::cout << "DEBUG: Created Floor entity" << std::endl;
 
 	// backpack 
 	//EntityID backpack = m_entityManager.CreateEntity();
@@ -165,6 +211,21 @@ void Engine::m_initScene() {
 	ballRender.isVisible = true;
 	m_entityManager.AddComponent<RenderComponent>(ball, ballRender);
 	m_entityManager.AddComponent<SpawnpointComponent>(ball, SpawnpointComponent{glm::vec3(0.0f, 5.0f, -3.0f), false});
+
+	// DEBUG
+	std::cout << "DEBUG: Created Ball (Backpack) Entity" << std::endl;
+
+	// add sounds
+	// DEBUG
+	std::cout << "DEBUG: Loading sounds..." << std::endl;
+	EntityID bgMusic = m_entityManager.CreateEntity();
+	AudioSourceComponent bgmASC{};
+	bgmASC.isLooping = true;
+	bgmASC.isPlaying = true;
+	bgmASC.path = "audio/a_moments_peace.wav";
+	bgmASC.id = 1;
+	m_entityManager.AddComponent<AudioSourceComponent>(bgMusic, bgmASC);
+	m_audioSystem.LoadSound(bgmASC.id, bgmASC.path);
 }
 
 void Engine::m_update(float deltaTime) {
@@ -175,7 +236,7 @@ void Engine::m_update(float deltaTime) {
 }
 
 void Engine::m_render() {
-	glClearColor(0.05f, 0.05f, 0.05f, 1.0f); // state-setting function
+	glClearColor(0.57f, 0.95f, 0.98f, 1.0f); // state-setting function
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // state-using function
 	m_renderSystem.Update(m_entityManager, m_deltaTime);
 }

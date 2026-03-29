@@ -23,12 +23,27 @@ void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 		// integrate position
 		tc.position += rbc.velocity * deltaTime;
 
+		// DEBUG
+		std::cout << "Entity " << entity << " is at ("
+			<< tc.position.x << ", "
+			<< tc.position.y << ", "
+			<< tc.position.z << ")" << std::endl;
+
 		// check for spawnpoint reset
 		if (entityManager.HasComponent<SpawnpointComponent>(entity) && entityManager.GetComponent<SpawnpointComponent>(entity).reset) {
-			tc.position = entityManager.GetComponent<SpawnpointComponent>(entity).spawnpoint;
+			auto spawnpoint = entityManager.GetComponent<SpawnpointComponent>(entity).spawnpoint;
+			// DEBUG
+			std::cout << "DEBUG: Respawning entity "
+				<< entity << " to ("
+				<< spawnpoint.x << ", "
+				<< spawnpoint.y << ", "
+				<< spawnpoint.z << ")" << std::endl;
+			tc.position = spawnpoint;
 			rbc.velocity = glm::vec3(0.0f);
 			rbc.acceleration = glm::vec3(0.0f);
 			entityManager.GetComponent<SpawnpointComponent>(entity).reset = false;
+			// DEBUG
+			std::cout << "Respawned object " << entity << std::endl;
 		}
 	}
 }

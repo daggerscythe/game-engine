@@ -13,6 +13,9 @@ void RenderSystem::LoadModel(uint32_t id, const std::string& path) {
 		return;
 	}
 	m_models[id] = new Model(path.c_str());
+
+	// DEBUG
+	std::cout << "DEBUG: Loaded Model " << id << " succesfully" << std::endl;
 }
 
 void RenderSystem::LoadShader(uint32_t id, const std::string& vertexPath, const std::string& fragmentPath) {
@@ -21,6 +24,9 @@ void RenderSystem::LoadShader(uint32_t id, const std::string& vertexPath, const 
 		return;
 	}
 	m_shaders[id] = new Shader(vertexPath.c_str(), fragmentPath.c_str());
+
+	// DEBUG
+	std::cout << "DEBUG: Loaded Shader " << id << " succesfully" << std::endl;
 }
 
 void RenderSystem::Update(EntityManager& entityManager, float deltaTime) {

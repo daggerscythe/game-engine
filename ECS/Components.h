@@ -72,6 +72,7 @@ struct CameraComponent {
 
 struct AudioSourceComponent {
 	std::string path = "";
+	uint32_t id = 0;
 	float volume = 1.0f;
 	float range = 25.0f;
 	bool isPlaying = false;
