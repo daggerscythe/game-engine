@@ -23,6 +23,9 @@ void AudioSystem::Init()
 		std::cerr << "ERROR: Could not make audio context current" << std::endl;
 		return;
 	}
+
+	// set volume 
+	m_volume = 0.05f;
 }
 
 void AudioSystem::Update(EntityManager& entityManager)
@@ -51,12 +54,14 @@ void AudioSystem::Update(EntityManager& entityManager)
 			entityManager.GetComponent<RigidBodyComponent>(entity).velocity :
 			glm::vec3(0.0f);
 		auto asc = entityManager.GetComponent<AudioSourceComponent>(entity);
-		auto source = m_sources[asc.id];
+		auto source = m_sources[entity]; // keyed by entity
 
 		// update source to match TC, RBC, ASC
-		alCall(alSource3f, source, AL_POSITION, sourcePos.x, sourcePos.y, sourcePos.z);
-		alCall(alSource3f, source, AL_VELOCITY, sourceVel.x, sourceVel.y, sourceVel.z);
-		alCall(alSourcei, source, AL_LOOPING, (asc.isLooping ? AL_TRUE : AL_FALSE));
+		if (asc.spatial) {
+			alCall(alSource3f, source, AL_POSITION, sourcePos.x, sourcePos.y, sourcePos.z);
+			alCall(alSource3f, source, AL_VELOCITY, sourceVel.x, sourceVel.y, sourceVel.z);
+		}
+			alCall(alSourcei, source, AL_LOOPING, (asc.isLooping ? AL_TRUE : AL_FALSE));
 
 		if (asc.isPlaying) {
 			ALint state;
@@ -69,8 +74,10 @@ void AudioSystem::Update(EntityManager& entityManager)
 	}
 }
 
-void AudioSystem::LoadSound(uint32_t id, const std::string& path)
+uint32_t AudioSystem::LoadSound(const std::string& path)
 {
+	uint32_t id = m_nextID++;
+
 	AudioFile<double> audioFile;
 	std::uint8_t channels;
 	std::int32_t sampleRate;
@@ -78,7 +85,7 @@ void AudioSystem::LoadSound(uint32_t id, const std::string& path)
 	std::vector<int16_t> soundData;
 	if (!audioFile.load(path)) {
 		std::cerr << "ERROR: Failed to load audio file at path " << path << std::endl;
-		return;
+		return 0;
 	}
 	channels = audioFile.getNumChannels();
 	sampleRate = audioFile.getSampleRate();
@@ -105,7 +112,7 @@ void AudioSystem::LoadSound(uint32_t id, const std::string& path)
 		std::cerr << "ERROR: Unsupported channel count: "
 			<< channels << " channels, "
 			<< bitsPerSample << " bps" << std::endl;
-		return;
+		return 0;
 	}
 
 	// create a buffer
@@ -117,27 +124,46 @@ void AudioSystem::LoadSound(uint32_t id, const std::string& path)
 	// add to list of buffers
 	m_buffers[id] = buffer;
 
-	// create a source
-	ALuint source;
-	alCall(alGenSources, 1, &source);
-	alCall(alSourcef, source, AL_PITCH, 1);
-	alCall(alSourcef, source, AL_GAIN, 0.05f); // volume
-	alCall(alSource3f, source, AL_POSITION, 0, 0, 0);
-	alCall(alSource3f, source, AL_VELOCITY, 0, 0, 0);
-	alCall(alSourcei, source, AL_LOOPING, AL_FALSE);
-	alCall(alSourcei, source, AL_BUFFER, buffer);
-
-	// multiple sources can use the same buffer
-
-	// add to list of sources
-	m_sources[id] = source;
-
 	// DEBUG
-	std::cout << "DEBUG: Loaded sound: " << path << std::endl;
+	std::cout << "DEBUG: Loaded sound at: " << path 
+		<< " with ID: " << id << std::endl;
+
+	return id;
 }
 
-void AudioSystem::PlaySound()
+void AudioSystem::RegisterSource(EntityID entity, uint32_t soundID, bool spatial)
 {
+	ALuint source;
+	alCall(alGenSources, 1, &source);
+	alCall(alSourcei, source, AL_BUFFER, m_buffers[soundID]);
+	alCall(alSourcef, source, AL_PITCH, 1.0f);
+	alCall(alSourcef, source, AL_GAIN, m_volume);
+	alCall(alSourcei, source, AL_LOOPING, AL_FALSE);
+	alCall(alSource3f, source, AL_POSITION, 0, 0, 0);
+	alCall(alSource3f, source, AL_VELOCITY, 0, 0, 0);
+	
+	if (spatial) {
+		alCall(alSourcef, source, AL_ROLLOFF_FACTOR, 1.0f);
+		alCall(alSourcef, source, AL_REFERENCE_DISTANCE, 5.0f); // full volume within 5 units
+		alCall(alSourcef, source, AL_MAX_DISTANCE, 50.0f); // silent beyond 50 units
+	}
+	else {
+		alCall(alSourcei, source, AL_SOURCE_RELATIVE, AL_TRUE);
+	}
+
+	// add to list of sources
+	m_sources[entity] = source;
+
+	// DEBUG
+	std::cout << "DEBUG: Registered entity: " << entity
+		<< " with soundID: " << soundID << std::endl;
+}
+
+void AudioSystem::PlaySound(EntityID entity)
+{
+	if (m_sources.find(entity) == m_sources.end()) return;
+	alCall(alSourceStop, m_sources[entity]); // stop if already playing
+	alCall(alSourcePlay, m_sources[entity]);
 }
 
 void AudioSystem::Shutdown()
@@ -149,7 +175,7 @@ void AudioSystem::Shutdown()
 
 	// delete all at once
 	if (!sourceIDs.empty())
-		alCall(alDeleteSources, sourceIDs.size(), sourceIDs.data());
+		alCall(alDeleteSources, static_cast<ALsizei>(sourceIDs.size()), sourceIDs.data());
 
 	m_sources.clear();
 
@@ -160,7 +186,7 @@ void AudioSystem::Shutdown()
 
 	// delete all at once
 	if (!bufferIDs.empty())
-		alCall(alDeleteBuffers, bufferIDs.size(), bufferIDs.data());
+		alCall(alDeleteBuffers, static_cast<ALsizei>(bufferIDs.size()), bufferIDs.data());
 
 	m_buffers.clear();
 
