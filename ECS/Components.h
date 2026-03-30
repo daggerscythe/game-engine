@@ -71,9 +71,9 @@ struct CameraComponent {
 };
 
 struct AudioSourceComponent {
+    enum class PlayState { Idle = 0, RequestPlay = 1, Playing = 2 } playState = PlayState::Idle;
 	float volume = 1.0f;
 	float range = 25.0f;
-	bool isPlaying = false;
 	bool isLooping = false;
 	bool spatial = true;
 };

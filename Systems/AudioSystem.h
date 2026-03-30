@@ -10,7 +10,7 @@ public:
 	void Init();
 	void Update(EntityManager& entityManager);
 	uint32_t LoadSound(const std::string& path);
-	void RegisterSource(EntityID entity, uint32_t soundID, bool spatial);
+	void RegisterSource(EntityID entity, uint32_t soundID, bool spatial, bool isLooping);
 	void PlaySound(EntityID entity);
 	void Shutdown();
 

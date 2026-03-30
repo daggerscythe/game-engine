@@ -23,12 +23,6 @@ void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 		// integrate position
 		tc.position += rbc.velocity * deltaTime;
 
-		// DEBUG
-		std::cout << "Entity " << entity << " is at ("
-			<< tc.position.x << ", "
-			<< tc.position.y << ", "
-			<< tc.position.z << ")" << std::endl;
-
 		// check for spawnpoint reset
 		if (entityManager.HasComponent<SpawnpointComponent>(entity) && entityManager.GetComponent<SpawnpointComponent>(entity).reset) {
 			auto spawnpoint = entityManager.GetComponent<SpawnpointComponent>(entity).spawnpoint;

@@ -23,9 +23,12 @@ void AudioSystem::Init()
 		std::cerr << "ERROR: Could not make audio context current" << std::endl;
 		return;
 	}
-
+	 
 	// set volume 
 	m_volume = 0.05f;
+
+	// trying to see if this fixes spatial audio issue
+	alCall(alDistanceModel, AL_LINEAR_DISTANCE_CLAMPED);
 }
 
 void AudioSystem::Update(EntityManager& entityManager)
@@ -53,7 +56,8 @@ void AudioSystem::Update(EntityManager& entityManager)
 		glm::vec3 sourceVel = entityManager.HasComponent<RigidBodyComponent>(entity) ?
 			entityManager.GetComponent<RigidBodyComponent>(entity).velocity :
 			glm::vec3(0.0f);
-		auto asc = entityManager.GetComponent<AudioSourceComponent>(entity);
+        // get a reference so we can update the component state
+		auto &asc = entityManager.GetComponent<AudioSourceComponent>(entity);
 		auto source = m_sources[entity]; // keyed by entity
 
 		// update source to match TC, RBC, ASC
@@ -63,12 +67,20 @@ void AudioSystem::Update(EntityManager& entityManager)
 		}
 			alCall(alSourcei, source, AL_LOOPING, (asc.isLooping ? AL_TRUE : AL_FALSE));
 
-		if (asc.isPlaying) {
-			ALint state;
-			alCall(alGetSourcei, source, AL_SOURCE_STATE, &state);
-			// don't play if already playing
+		ALint state;
+		alCall(alGetSourcei, source, AL_SOURCE_STATE, &state);
+
+		if (asc.playState == AudioSourceComponent::PlayState::RequestPlay) {
+			// dont play if already playing
 			if (state != AL_PLAYING) {
 				alCall(alSourcePlay, source);
+			}
+			asc.playState = AudioSourceComponent::PlayState::Playing;
+		}
+
+		if (asc.playState == AudioSourceComponent::PlayState::Playing) {
+			if (state != AL_PLAYING) {
+				asc.playState = AudioSourceComponent::PlayState::Idle;
 			}
 		}
 	}
@@ -104,10 +116,13 @@ uint32_t AudioSystem::LoadSound(const std::string& path)
 	}
 
 	ALenum format;
-	if (channels == 1 && bitsPerSample == 8) format = AL_FORMAT_MONO8;
-	else if (channels == 1 && bitsPerSample == 16) format = AL_FORMAT_MONO16;
-	else if (channels == 2 && bitsPerSample == 8) format = AL_FORMAT_STEREO8;
-	else if (channels == 2 && bitsPerSample == 16) format = AL_FORMAT_STEREO16;
+	if (channels == 1 && bitsPerSample == 8) {
+		format = AL_FORMAT_MONO8;
+		std::cout << "DEBUG: Detected mono 8-bit audio format" << std::endl;
+	}
+	else if (channels == 1 && bitsPerSample == 16) { format = AL_FORMAT_MONO16; std::cout << "DEBUG: Detected mono 16-bit audio format" << std::endl; }
+	else if (channels == 2 && bitsPerSample == 8) { format = AL_FORMAT_STEREO8; std::cout << "DEBUG: Detected stereo 8-bit audio format" << std::endl; }
+	else if (channels == 2 && bitsPerSample == 16) { format = AL_FORMAT_STEREO16; std::cout << "DEBUG: Detected stereo 16-bit audio format" << std::endl; }
 	else {
 		std::cerr << "ERROR: Unsupported channel count: "
 			<< channels << " channels, "
@@ -131,14 +146,14 @@ uint32_t AudioSystem::LoadSound(const std::string& path)
 	return id;
 }
 
-void AudioSystem::RegisterSource(EntityID entity, uint32_t soundID, bool spatial)
+void AudioSystem::RegisterSource(EntityID entity, uint32_t soundID, bool spatial, bool isLooping)
 {
 	ALuint source;
 	alCall(alGenSources, 1, &source);
 	alCall(alSourcei, source, AL_BUFFER, m_buffers[soundID]);
 	alCall(alSourcef, source, AL_PITCH, 1.0f);
 	alCall(alSourcef, source, AL_GAIN, m_volume);
-	alCall(alSourcei, source, AL_LOOPING, AL_FALSE);
+	alCall(alSourcei, source, AL_LOOPING, (isLooping ? AL_TRUE : AL_FALSE));
 	alCall(alSource3f, source, AL_POSITION, 0, 0, 0);
 	alCall(alSource3f, source, AL_VELOCITY, 0, 0, 0);
 	
@@ -159,12 +174,12 @@ void AudioSystem::RegisterSource(EntityID entity, uint32_t soundID, bool spatial
 		<< " with soundID: " << soundID << std::endl;
 }
 
-void AudioSystem::PlaySound(EntityID entity)
-{
-	if (m_sources.find(entity) == m_sources.end()) return;
-	alCall(alSourceStop, m_sources[entity]); // stop if already playing
-	alCall(alSourcePlay, m_sources[entity]);
-}
+// NOTE: unnecessary for now, but keep for later use
+//void AudioSystem::PlaySound(EntityID entity)
+//{
+//	if (!em.HasComponent<AudioSourceComponent>(entity)) return;
+//		em.GetComponent<AudioSourceComponent>(entity).playState = AudioSourceComponent::PlayState::RequestPlay;
+//}
 
 void AudioSystem::Shutdown()
 {

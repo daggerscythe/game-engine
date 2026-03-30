@@ -3,7 +3,9 @@
 #include <iostream>
 
 void CollisionSystem::Update(EntityManager& entityManager) {
-	auto entities = entityManager.GetEntitiesWith<ColliderComponent, TransformComponent>();
+    auto entities = entityManager.GetEntitiesWith<ColliderComponent, TransformComponent>();
+
+	std::unordered_set<uint64_t> currentCollisions;
 
 	// check every pair of entities
 	for (int i = 0; i < entities.size(); i++) {
@@ -52,8 +54,29 @@ void CollisionSystem::Update(EntityManager& entityManager) {
 			// DEBUG
 			std::cout << "DEBUG: Resolving collision between " << entities[i] << " and " << entities[j] << std::endl;
 			m_resolveCollision(rbcA, tcA, rbcB, tcB, info);
+
+            // record this collision pair in current set (normalize ordering)
+			uint32_t u = std::min(a, b);
+			uint32_t v = std::max(a, b);
+			uint64_t key = (static_cast<uint64_t>(u) << 32) | static_cast<uint64_t>(v);
+			currentCollisions.insert(key);
+
+            // play collision sounds only on collision-enter (not while persisting)
+			if (m_prevCollisions.find(key) == m_prevCollisions.end()) {
+				if (entityManager.HasComponent<AudioSourceComponent>(a)) {
+					entityManager.GetComponent<AudioSourceComponent>(a).playState = AudioSourceComponent::PlayState::RequestPlay;
+				}
+				else if (entityManager.HasComponent<AudioSourceComponent>(b)) {
+					entityManager.GetComponent<AudioSourceComponent>(b).playState = AudioSourceComponent::PlayState::RequestPlay;
+				}
+			}
 		}
 	}
+
+    // move current collisions into previous for next frame. Moving allows the previous
+	// container to release its previous memory allocation when currentCollisions is small,
+	// which helps keep memory usage bounded.
+	m_prevCollisions = std::move(currentCollisions);
 }
 
 CollisionInfo CollisionSystem::m_testAABBvsAABB(const TransformComponent& tcA, const ColliderComponent& ccA, const TransformComponent& tcB, const ColliderComponent& ccB) {
