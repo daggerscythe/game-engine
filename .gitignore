@@ -2,19 +2,25 @@
 .vs/
 *.suo
 *.user
+*.sln.doccache
 
 # Build output
 x64/
+x86/
 Debug/
 Release/
-*.obj
-*.exe
+bin/
+obj/
+
+# Selective extensions
 *.pdb
 *.ilk
-*.dll
 *.idb
 *.tlog
 *.recipe
 *.log
 *.lastbuildstate
 *.items.tlog
+
+# Force unignore
+!/dll/*.dll
