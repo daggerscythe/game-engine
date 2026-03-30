@@ -117,6 +117,28 @@ void Engine::m_initScene() {
 	m_renderSystem.LoadShader(2, "LightingVertexShader.glsl", "LightingFragmentShader.glsl");
 	m_renderSystem.LoadModel(1, "models/backpack/backpack.obj");
 
+	// add sounds
+	// DEBUG
+	std::cout << "DEBUG: Loading sounds..." << std::endl;
+	
+	uint32_t bgmSound = m_audioSystem.LoadSound("audio/a_moments_peace.wav");
+	uint32_t bounceSound = m_audioSystem.LoadSound("audio/bounce.wav");
+
+	// DEBUG
+	std::cout << "DEBUG: Loading entities..." << std::endl;
+
+	// background music
+	EntityID bgm = m_entityManager.CreateEntity();
+	AudioSourceComponent bgmASC{};
+	bgmASC.isLooping = true;
+	bgmASC.isPlaying = true;
+	bgmASC.spatial = false;
+	m_entityManager.AddComponent<AudioSourceComponent>(bgm, bgmASC);
+	m_audioSystem.RegisterSource(bgm, bgmSound, bgmASC.spatial);
+
+	// DEBUG
+	std::cout << "DEBUG: Created background music entity" << std::endl;
+
 	// create player entity
 	EntityID player = m_entityManager.CreateEntity();
 	m_entityManager.AddComponent<TransformComponent>(player, TransformComponent{});
@@ -180,17 +202,6 @@ void Engine::m_initScene() {
 	// DEBUG
 	std::cout << "DEBUG: Created Floor entity" << std::endl;
 
-	// backpack 
-	//EntityID backpack = m_entityManager.CreateEntity();
-	//TransformComponent backpackTransform{};
-	//backpackTransform.position = glm::vec3(0.0f, 0.0f, -3.0f);
-	//RenderComponent backpackRender{};
-	//backpackRender.meshID = 1;
-	//backpackRender.shaderID = 1;
-	//backpackRender.isVisible = true;
-	//m_entityManager.AddComponent<TransformComponent>(backpack, backpackTransform);
-	//m_entityManager.AddComponent<RenderComponent>(backpack, backpackRender);
-
 	// ball 
 	EntityID ball = m_entityManager.CreateEntity();
 	TransformComponent ballTransform{};
@@ -211,21 +222,16 @@ void Engine::m_initScene() {
 	ballRender.isVisible = true;
 	m_entityManager.AddComponent<RenderComponent>(ball, ballRender);
 	m_entityManager.AddComponent<SpawnpointComponent>(ball, SpawnpointComponent{glm::vec3(0.0f, 5.0f, -3.0f), false});
+	AudioSourceComponent ballASC{};
+	ballASC.isLooping = false;
+	ballASC.isPlaying = false;
+	ballASC.spatial = true;
+	m_entityManager.AddComponent<AudioSourceComponent>(ball, ballASC);
+	m_audioSystem.RegisterSource(ball, bounceSound, ballASC.spatial);
 
 	// DEBUG
 	std::cout << "DEBUG: Created Ball (Backpack) Entity" << std::endl;
 
-	// add sounds
-	// DEBUG
-	std::cout << "DEBUG: Loading sounds..." << std::endl;
-	EntityID bgMusic = m_entityManager.CreateEntity();
-	AudioSourceComponent bgmASC{};
-	bgmASC.isLooping = true;
-	bgmASC.isPlaying = true;
-	bgmASC.path = "audio/a_moments_peace.wav";
-	bgmASC.id = 1;
-	m_entityManager.AddComponent<AudioSourceComponent>(bgMusic, bgmASC);
-	m_audioSystem.LoadSound(bgmASC.id, bgmASC.path);
 }
 
 void Engine::m_update(float deltaTime) {
