@@ -179,7 +179,15 @@ void CollisionSystem::m_resolveCollision(RigidBodyComponent& rbcA, TransformComp
 	glm::vec3 relativeVelocity = rbcB.velocity - rbcA.velocity;
 	float velocityAlongNormal = glm::dot(relativeVelocity, info.normal);
 
-	// don't resolve if objects are spearating
+	// positional correction 
+	const float correctionFactor = 0.8f;
+	const float slop = 0.001f; // small jitter tolerance
+	float correctionMag = std::max(info.penetration - slop, 0.0f) / invMassSum * correctionFactor;
+	glm::vec3 correction = correctionMag * info.normal;
+	if (!rbcA.isStatic) tcA.position -= invMassA * correction;
+	if (!rbcB.isStatic) tcB.position += invMassB * correction;
+
+	// don't resolve if objects are separating
 	if (velocityAlongNormal > 0) return;
 
 	// calculate impulse
@@ -192,18 +200,10 @@ void CollisionSystem::m_resolveCollision(RigidBodyComponent& rbcA, TransformComp
 	if (!rbcA.isStatic) rbcA.velocity -= invMassA * impulse;
 	if (!rbcB.isStatic) rbcB.velocity += invMassB * impulse;
 
-	// positional correction 
-	const float correctionFactor = 0.8f;
-	const float slop = 0.5f; // small jitter tolerance
-	float correctionMag = std::max(info.penetration - slop, 0.0f) / invMassSum * correctionFactor;
-	glm::vec3 correction = correctionMag * info.normal;
-	if (!rbcA.isStatic) tcA.position -= invMassA * correction;
-	if (!rbcB.isStatic) tcB.position += invMassB * correction;
-
 	// sleep threshold -- stop resolving micro bounces
-	const float sleepThreshold = 0.1f;
-	if (!rbcB.isStatic && glm::length(rbcB.velocity) < sleepThreshold)
+	const float sleepThreshold = 0.05f;
+	if (!rbcB.isStatic && glm::length(rbcB.velocity) < sleepThreshold && info.penetration <= slop)
 		rbcB.velocity = glm::vec3(0.0f);
-	if (!rbcA.isStatic && glm::length(rbcA.velocity) < sleepThreshold)
+	if (!rbcA.isStatic && glm::length(rbcA.velocity) < sleepThreshold && info.penetration <= slop)
 		rbcA.velocity = glm::vec3(0.0f);
 }
