@@ -4,6 +4,64 @@ Model::Model(const char* path)
 {
 	m_loadModel(path);
 }
+
+Model::Model(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures)
+{
+	m_meshes.push_back(Mesh(vertices, indices, textures));
+}
+
+Model* Model::CreateBox()
+{
+	std::vector<Vertex> vertices;
+	std::vector<unsigned int> indices;
+	std::vector<Texture> textures;
+
+	glm::vec3 positions[8] = {
+		{-0.5f, -0.5f, -0.5f},
+		{ 0.5f, -0.5f, -0.5f},
+		{ 0.5f,  0.5f, -0.5f},
+		{-0.5f,  0.5f, -0.5f},
+		{-0.5f, -0.5f,  0.5f},
+		{ 0.5f, -0.5f,  0.5f},
+		{ 0.5f,  0.5f,  0.5f},
+		{-0.5f,  0.5f,  0.5f}
+	};
+
+	auto pushFace = [&](glm::vec3 a, glm::vec3 b, glm::vec3 c, glm::vec3 d, glm::vec3 normal) {
+		unsigned int start = (unsigned int)vertices.size();
+		Vertex v1{a, normal, glm::vec2(0.0f, 0.0f)};
+		Vertex v2{b, normal, glm::vec2(1.0f, 0.0f)};
+		Vertex v3{c, normal, glm::vec2(1.0f, 1.0f)};
+		Vertex v4{d, normal, glm::vec2(0.0f, 1.0f)};
+		vertices.push_back(v1);
+		vertices.push_back(v2);
+		vertices.push_back(v3);
+		vertices.push_back(v4);
+		// two triangles
+		indices.push_back(start + 0);
+		indices.push_back(start + 1);
+		indices.push_back(start + 2);
+		indices.push_back(start + 2);
+		indices.push_back(start + 3);
+		indices.push_back(start + 0);
+	};
+
+	// -Z face
+	pushFace(positions[0], positions[1], positions[2], positions[3], glm::vec3(0.0f, 0.0f, -1.0f));
+	// +Z face
+	pushFace(positions[5], positions[4], positions[7], positions[6], glm::vec3(0.0f, 0.0f, 1.0f));
+	// -X face
+	pushFace(positions[4], positions[0], positions[3], positions[7], glm::vec3(-1.0f, 0.0f, 0.0f));
+	// +X face
+	pushFace(positions[1], positions[5], positions[6], positions[2], glm::vec3(1.0f, 0.0f, 0.0f));
+	// -Y face
+	pushFace(positions[4], positions[5], positions[1], positions[0], glm::vec3(0.0f, -1.0f, 0.0f));
+	// +Y face
+	pushFace(positions[3], positions[2], positions[6], positions[7], glm::vec3(0.0f, 1.0f, 0.0f));
+
+	return new Model(vertices, indices, textures);
+}
+
 void Model::Draw(Shader& shader)
 {
 	for (unsigned int i = 0; i < m_meshes.size(); i++)

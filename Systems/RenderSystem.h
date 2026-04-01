@@ -16,11 +16,15 @@ public:
 	void LoadModel(uint32_t id, const std::string& path);
 	void LoadShader(uint32_t id, const std::string& vertexPath, const std::string& fragmentPath);
 	
+	// create simple procedural meshes
+	void CreateBoxModel(uint32_t id);
+
 	// called every frame
 	void Update(EntityManager& entityManager, float deltatTime);
 
 	// cleanup models and shaders
 	void Shutdown();
+
 
 private:
 	// asset storage

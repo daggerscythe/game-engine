@@ -29,6 +29,17 @@ void RenderSystem::LoadShader(uint32_t id, const std::string& vertexPath, const 
 	std::cout << "DEBUG: Loaded Shader " << id << " succesfully" << std::endl;
 }
 
+void RenderSystem::CreateBoxModel(uint32_t id) {
+	if (m_models.find(id) != m_models.end()) {
+		std::cout << "Mesh ID " << id << " already exists" << std::endl;
+		return;
+	}
+
+	Model* model = Model::CreateBox();
+	m_models[id] = model;
+	std::cout << "DEBUG: Created box mesh " << id << " via Model::CreateBox" << std::endl;
+}
+
 void RenderSystem::Update(EntityManager& entityManager, float deltaTime) {
 	m_updateCamera(entityManager, deltaTime);
 
@@ -44,6 +55,7 @@ void RenderSystem::Shutdown() {
 	m_models.clear();
 	m_shaders.clear();
 }
+
 
 void RenderSystem::m_updateCamera(EntityManager& entityManager, float deltaTime) {
 	// get all camera entities

@@ -20,6 +20,8 @@ class Model
 {
 public: 
 	Model(const char* path);
+	Model(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures);
+	static Model* CreateBox();
 	void Draw(Shader& shader);
 private:
 	vector<Mesh> m_meshes;
