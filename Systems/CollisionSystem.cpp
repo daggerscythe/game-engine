@@ -7,6 +7,13 @@ void CollisionSystem::Update(EntityManager& entityManager) {
 
 	std::unordered_set<uint64_t> currentCollisions;
 
+	// reset ground contact counts for all rigid bodies w/ colliders
+	auto rbEntities = entityManager.GetEntitiesWith<RigidBodyComponent, ColliderComponent>();
+	for (EntityID e : rbEntities) {
+		auto &rb = entityManager.GetComponent<RigidBodyComponent>(e);
+		rb.groundContactCount = 0;
+	}
+
 	// check every pair of entities
 	for (int i = 0; i < entities.size(); i++) {
 		EntityID a = entities[i];
@@ -55,6 +62,26 @@ void CollisionSystem::Update(EntityManager& entityManager) {
 			std::cout << "DEBUG: Resolving collision between " << entities[i] << " and " << entities[j] << std::endl;
 			m_resolveCollision(rbcA, tcA, rbcB, tcB, info);
 
+			// determine which body is contacting the ground based on the collision normal
+			// info.normal points from A -> B
+			const float groundNormalThreshold = 0.7071f; // cos(45deg)
+			if (entityManager.HasComponent<RigidBodyComponent>(a) && !rbcA.isStatic) {
+				// if normal points up - A is ground, ignore
+				if (info.normal.y < -groundNormalThreshold) {
+					// normal points down - A above B
+					auto &rb = entityManager.GetComponent<RigidBodyComponent>(a);
+					rb.groundContactCount++;
+				}
+			}
+			if (entityManager.HasComponent<RigidBodyComponent>(b) && !rbcB.isStatic) {
+				if (info.normal.y > groundNormalThreshold) {
+					// normal points up - B above A
+					auto &rb = entityManager.GetComponent<RigidBodyComponent>(b);
+					rb.groundContactCount++;
+				}
+				// if normal points down - B is ground, ignore
+			}
+
             // record this collision pair in current set (normalize ordering)
 			uint32_t u = std::min(a, b);
 			uint32_t v = std::max(a, b);
@@ -73,9 +100,7 @@ void CollisionSystem::Update(EntityManager& entityManager) {
 		}
 	}
 
-    // move current collisions into previous for next frame. Moving allows the previous
-	// container to release its previous memory allocation when currentCollisions is small,
-	// which helps keep memory usage bounded.
+    // move current collisions into previous for next frame
 	m_prevCollisions = std::move(currentCollisions);
 }
 

@@ -2,9 +2,7 @@
 #include <iostream>
 
 void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
-	// TODO: implement SpawnPoints and remove this later
-	InputComponent& input = entityManager.GetComponent<InputComponent>(entityManager.GetEntitiesWith<InputComponent>()[0]);
-	
+
 	auto entities = entityManager.GetEntitiesWith<RigidBodyComponent, TransformComponent>();
 
 	for (EntityID entity : entities) {
@@ -13,6 +11,23 @@ void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 
 		// skip static objects
 		if (rbc.isStatic) continue;
+
+		// DEBUG
+		//if (entity == 4) { // player
+		//	std::cout << "DEBUG: player has " << rbc.groundContactCount << " ground contact points" << std::endl;
+		//}
+
+        // check for jumps
+		if (entityManager.HasComponent<InputComponent>(entity)) {
+			InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
+			if (rbc.groundContactCount > 0 && input.jumpRequested) {
+				// DEBUG
+				std::cout << "DEBUG: Performing jump..." << std::endl;
+				rbc.velocity.y = JUMP_VELOCITY;
+				input.jumpRequested = false;
+				rbc.groundContactCount = 0;
+			}
+		}
 
 		// apply gravity
 		rbc.acceleration = GRAVITY;
@@ -28,11 +43,16 @@ void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 			auto spawnpoint = entityManager.GetComponent<SpawnpointComponent>(entity).spawnpoint;
 			// DEBUG
 			std::cout << "DEBUG: Respawning entity "
-				<< entity << " to ("
+                << entity << " to ("
 				<< spawnpoint.x << ", "
 				<< spawnpoint.y << ", "
 				<< spawnpoint.z << ")" << std::endl;
 			tc.position = spawnpoint;
+			// if this entity has a camera attached, sync the camera position as well
+			if (entityManager.HasComponent<CameraComponent>(entity)) {
+				auto &cam = entityManager.GetComponent<CameraComponent>(entity);
+				cam.position = spawnpoint;
+			}
 			rbc.velocity = glm::vec3(0.0f);
 			rbc.acceleration = glm::vec3(0.0f);
 			entityManager.GetComponent<SpawnpointComponent>(entity).reset = false;

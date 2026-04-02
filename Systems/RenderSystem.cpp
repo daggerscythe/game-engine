@@ -83,10 +83,26 @@ void RenderSystem::m_updateCamera(EntityManager& entityManager, float deltaTime)
 
 		// process keyboard
 		float velocity = camera.speed * deltaTime;
-		if (input.moveForward) camera.position += camera.front * velocity;
-		if (input.moveBackward) camera.position -= camera.front * velocity;
-		if (input.moveLeft) camera.position -= camera.right * velocity;
-		if (input.moveRight) camera.position += camera.right * velocity;
+		// only xz to avoud flying
+		glm::vec3 planarForward = glm::normalize(glm::vec3(camera.front.x, 0.0f, camera.front.z));
+		glm::vec3 planarRight = glm::normalize(glm::vec3(camera.right.x, 0.0f, camera.right.z));
+
+		// move transform component with the camera
+		if (entityManager.HasComponent<TransformComponent>(entity)) {
+			TransformComponent& tc = entityManager.GetComponent<TransformComponent>(entity);
+			if (input.moveForward) tc.position += planarForward * velocity;
+			if (input.moveBackward) tc.position -= planarForward * velocity;
+			if (input.moveLeft) tc.position -= planarRight * velocity;
+			if (input.moveRight) tc.position += planarRight * velocity;
+			// keep camera synced to transform
+			camera.position = tc.position;
+		}
+		else {
+			if (input.moveForward) camera.position += camera.front * velocity;
+			if (input.moveBackward) camera.position -= camera.front * velocity;
+			if (input.moveLeft) camera.position -= camera.right * velocity;
+			if (input.moveRight) camera.position += camera.right * velocity;
+		}
 
 		// cannot fly around
 		// camera.position.y = 0.0f;

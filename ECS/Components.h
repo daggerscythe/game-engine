@@ -16,6 +16,7 @@ struct RigidBodyComponent {
 	float mass = 1.0f;
 	float restitution = 0.0f; // bounciness (0-1)
 	bool isStatic = false;
+	int groundContactCount = 0; // how many points of the body are in contact w the ground
 };
 
 struct ColliderComponent {
@@ -83,6 +84,7 @@ struct InputComponent {
 	bool moveBackward = false;
 	bool moveLeft = false;
 	bool moveRight = false;
+	bool jumpRequested = false;
 
 	float mouseDeltaX = 0.0f;
 	float mouseDeltaY = 0.0f;

@@ -131,7 +131,7 @@ void Engine::m_initScene() {
 	std::cout << "DEBUG: Loading entities..." << std::endl;
 
 	// background music
-	EntityID bgm = m_entityManager.CreateEntity();
+	EntityID bgm = m_entityManager.CreateEntity(); // ID = 0
     AudioSourceComponent bgmASC{};
 	bgmASC.isLooping = true;
 	bgmASC.playState = AudioSourceComponent::PlayState::RequestPlay;
@@ -142,18 +142,8 @@ void Engine::m_initScene() {
 	// DEBUG
 	std::cout << "DEBUG: Created background music entity" << std::endl;
 
-	// create player entity
-	EntityID player = m_entityManager.CreateEntity();
-	m_entityManager.AddComponent<TransformComponent>(player, TransformComponent{});
-	m_entityManager.AddComponent<CameraComponent>(player, CameraComponent{});
-	m_entityManager.AddComponent<InputComponent>(player, InputComponent{});
-	m_entityManager.AddComponent<TagComponent>(player, TagComponent{ "Player" });
-
-	// DEBUG
-	std::cout << "DEBUG: Created Player entity" << std::endl;
-
 	// sun - directional light
-	EntityID sun = m_entityManager.CreateEntity();
+	EntityID sun = m_entityManager.CreateEntity(); // ID = 1
 	m_entityManager.AddComponent<TransformComponent>(sun, TransformComponent{});
 	LightComponent sunComp{};
 	sunComp.type = LightComponent::Type::Directional;
@@ -168,7 +158,7 @@ void Engine::m_initScene() {
 	std::cout << "DEBUG: Created Sun entity" << std::endl;
 
 	// flashlight - attached to player
-	EntityID flashlight = m_entityManager.CreateEntity();
+	EntityID flashlight = m_entityManager.CreateEntity(); // ID = 2
 	m_entityManager.AddComponent<TransformComponent>(flashlight, TransformComponent{});
 	LightComponent flashlightComp{};
 	flashlightComp.type = LightComponent::Type::Spot;
@@ -184,17 +174,17 @@ void Engine::m_initScene() {
 	std::cout << "DEBUG: Created Flashlight entity" << std::endl;
 
 	// floor 
-	EntityID floor = m_entityManager.CreateEntity();
+	EntityID floor = m_entityManager.CreateEntity(); // ID = 3
 	TransformComponent floorTransform{};
 	floorTransform.position = glm::vec3(0.0f, -2.0f, -3.0f);
 	floorTransform.scale = glm::vec3(30.0f, 0.1f, 30.0f);
 	m_entityManager.AddComponent<TransformComponent>(floor, floorTransform);
-	RigidBodyComponent floorRB{};
+    RigidBodyComponent floorRB{};
 	floorRB.isStatic = true;
 	m_entityManager.AddComponent<RigidBodyComponent>(floor, floorRB);
 	ColliderComponent floorCollider{};
 	floorCollider.shape = ColliderComponent::Shape::AABB;
-	floorCollider.size = glm::vec3(10.0f, 0.1f, 10.0f);
+	floorCollider.size = floorTransform.scale * 0.5f;
 	m_entityManager.AddComponent<ColliderComponent>(floor, floorCollider);
 	RenderComponent floorRender{};
 	floorRender.meshID = 2;
@@ -205,8 +195,41 @@ void Engine::m_initScene() {
 	// DEBUG
 	std::cout << "DEBUG: Created Floor entity" << std::endl;
 
+	// create player entity
+	EntityID player = m_entityManager.CreateEntity(); // ID = 4
+	//m_entityManager.AddComponent<TransformComponent>(player, TransformComponent{});
+	TransformComponent playerTransform{};
+	playerTransform.position = glm::vec3(0.0f, 5.0f, 3.0f);
+	m_entityManager.AddComponent<TransformComponent>(player, playerTransform);
+	//m_entityManager.AddComponent<RigidBodyComponent>(player, RigidBodyComponent{});
+	RigidBodyComponent playerRB{};
+	playerRB.mass = 1.0f;
+	playerRB.isStatic = false;
+	playerRB.restitution = 0.5f;
+	m_entityManager.AddComponent<RigidBodyComponent>(player, playerRB);
+	//m_entityManager.AddComponent<ColliderComponent>(player, ColliderComponent{});
+	ColliderComponent playerCollider{};
+	playerCollider.shape = ColliderComponent::Shape::Sphere;
+	playerCollider.size = glm::vec3(1.0f);
+	m_entityManager.AddComponent<ColliderComponent>(player, playerCollider);
+	m_entityManager.AddComponent<SpawnpointComponent>(player, SpawnpointComponent{ playerTransform.position, false });
+	m_entityManager.AddComponent<CameraComponent>(player, CameraComponent{});
+	m_entityManager.AddComponent<InputComponent>(player, InputComponent{});
+	m_entityManager.AddComponent<TagComponent>(player, TagComponent{ "Player" });
+	// for footsteps:
+	//AudioSourceComponent playerASC{};
+	//playerASC.isLooping = false;
+	//playerASC.playState = AudioSourceComponent::PlayState::Idle;
+	//playerASC.spatial = true;
+	//m_entityManager.AddComponent<AudioSourceComponent>(player, playerASC);
+	//m_audioSystem.RegisterSource(player, bounceSound, playerASC.spatial, playerASC.isLooping);
+
+
+	// DEBUG
+	std::cout << "DEBUG: Created Player entity" << std::endl;
+
 	// ball 
-	EntityID ball = m_entityManager.CreateEntity();
+	EntityID ball = m_entityManager.CreateEntity(); // ID = 5
 	TransformComponent ballTransform{};
 	ballTransform.position = glm::vec3(0.0f, 5.0f, -3.0f);
 	m_entityManager.AddComponent<TransformComponent>(ball, ballTransform);
@@ -224,7 +247,7 @@ void Engine::m_initScene() {
 	ballRender.shaderID = 1;
 	ballRender.isVisible = true;
 	m_entityManager.AddComponent<RenderComponent>(ball, ballRender);
-	m_entityManager.AddComponent<SpawnpointComponent>(ball, SpawnpointComponent{glm::vec3(0.0f, 5.0f, -3.0f), false});
+	m_entityManager.AddComponent<SpawnpointComponent>(ball, SpawnpointComponent{ ballTransform.position, false });
     AudioSourceComponent ballASC{};
 	ballASC.isLooping = false;
 	ballASC.playState = AudioSourceComponent::PlayState::Idle;

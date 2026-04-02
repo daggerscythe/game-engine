@@ -16,10 +16,20 @@ void InputSystem::Update(EntityManager& entityManager, float deltaTime) {
 		InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
 
 		// write current keyboard state
+		// WASD - MOVEMENT
 		input.moveForward = glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS;
 		input.moveBackward = glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS;
 		input.moveLeft = glfwGetKey(m_window, GLFW_KEY_A) == GLFW_PRESS;
 		input.moveRight = glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS;
+
+		// SPACE - JUMP
+		if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+			std::cout << "DEBUG: Space pressed" << std::endl;
+			input.jumpRequested = true;
+		}
+		//input.jumpRequested = glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS;
+
+		// R - SPAWNPOINT RESET
 		if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS) {
 			auto spawnpoints = entityManager.GetEntitiesWith<SpawnpointComponent>();
 			for (EntityID spawnpoint : spawnpoints) {
