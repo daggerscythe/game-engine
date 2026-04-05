@@ -18,6 +18,7 @@ public:
 	
 	// create simple procedural meshes
 	void CreateBoxModel(uint32_t id);
+	void CreateBoxModel(uint32_t id, const std::string& texturePath);
 
 	// called every frame
 	void Update(EntityManager& entityManager, float deltatTime);

@@ -22,6 +22,7 @@ public:
 	Model(const char* path);
 	Model(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures);
 	static Model* CreateBox();
+	static Model* CreateBox(const std::string& texturePath);
 	void Draw(Shader& shader);
 private:
 	vector<Mesh> m_meshes;

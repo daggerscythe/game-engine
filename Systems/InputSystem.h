@@ -17,5 +17,6 @@ private:
 	bool m_firstMouse = true;
 	float m_lastX = 0.0f;
 	float m_lastY = 0.0f;
+	bool m_fWasPressed = false; // for flashlight toggle
 };
 

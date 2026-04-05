@@ -16,8 +16,6 @@ void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 		if (entityManager.HasComponent<InputComponent>(entity)) {
 			InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
 			if (rbc.groundContactCount > 0 && input.jumpRequested) {
-				// DEBUG
-				std::cout << "DEBUG: Performing jump..." << std::endl;
 				rbc.velocity.y = JUMP_VELOCITY;
 				input.jumpRequested = false;
 				rbc.groundContactCount = 0;
@@ -36,12 +34,6 @@ void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 		// check for spawnpoint reset
 		if (entityManager.HasComponent<SpawnpointComponent>(entity) && entityManager.GetComponent<SpawnpointComponent>(entity).reset) {
 			auto spawnpoint = entityManager.GetComponent<SpawnpointComponent>(entity).spawnpoint;
-			// DEBUG
-			std::cout << "DEBUG: Respawning entity "
-                << entity << " to ("
-				<< spawnpoint.x << ", "
-				<< spawnpoint.y << ", "
-				<< spawnpoint.z << ")" << std::endl;
 			tc.position = spawnpoint;
 			// if this entity has a camera attached, sync the camera position as well
 			if (entityManager.HasComponent<CameraComponent>(entity)) {
@@ -51,8 +43,6 @@ void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 			rbc.velocity = glm::vec3(0.0f);
 			rbc.acceleration = glm::vec3(0.0f);
 			entityManager.GetComponent<SpawnpointComponent>(entity).reset = false;
-			// DEBUG
-			std::cout << "Respawned object " << entity << std::endl;
 		}
 	}
 }

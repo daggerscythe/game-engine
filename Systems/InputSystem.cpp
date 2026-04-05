@@ -8,9 +8,13 @@ void InputSystem::Init(GLFWwindow* window) {
 }
 
 void InputSystem::Update(EntityManager& entityManager, float deltaTime) {
-	
-	// get the player entites (only entities with inputcomponent)
+
+    // get the player entites (only entities with inputcomponent)
 	auto entities = entityManager.GetEntitiesWith<InputComponent>();
+
+	// read F key once
+	bool fPressed = glfwGetKey(m_window, GLFW_KEY_F) == GLFW_PRESS;
+	bool toggledThisUpdate = false;
 
 	for (EntityID entity : entities) {
 		InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
@@ -25,7 +29,7 @@ void InputSystem::Update(EntityManager& entityManager, float deltaTime) {
 		// SPACE - JUMP
 		input.jumpRequested = glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS;
 
-		// R - SPAWNPOINT RESET
+        // R - SPAWNPOINT RESET
 		if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS) {
 			auto spawnpoints = entityManager.GetEntitiesWith<SpawnpointComponent>();
 			for (EntityID spawnpoint : spawnpoints) {
@@ -34,9 +38,24 @@ void InputSystem::Update(EntityManager& entityManager, float deltaTime) {
 			}
 		}
 
+        // F - TOGGLE FLASHLIGHT
+		if (!toggledThisUpdate && !fPressed && m_fWasPressed) {
+			auto lights = entityManager.GetEntitiesWith<LightComponent, TagComponent>();
+			for (EntityID light : lights) {
+				TagComponent& tag = entityManager.GetComponent<TagComponent>(light);
+				if (tag.tag == "Flashlight") {
+					LightComponent& lc = entityManager.GetComponent<LightComponent>(light);
+					lc.isOn = !lc.isOn;
+				}
+			}
+			toggledThisUpdate = true;
+		}
+
 		// esc to close
 		if (glfwGetKey(m_window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(m_window, true);
 	}
+    // store F key state for next frame
+	m_fWasPressed = fPressed;
 }
 
 void InputSystem::Flush(EntityManager& entityManager) {

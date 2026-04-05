@@ -117,8 +117,8 @@ void Engine::m_initScene() {
 	m_renderSystem.LoadShader(2, "LightingVertexShader.glsl", "LightingFragmentShader.glsl");
 	m_renderSystem.LoadModel(1, "models/backpack/backpack.obj");
 	
-	// create a box for floor
-	m_renderSystem.CreateBoxModel(2);
+    // create a box for floor (textured with grass)
+	m_renderSystem.CreateBoxModel(2, "textures/grass.jpg");
 
 	// add sounds
 	// DEBUG
@@ -188,7 +188,7 @@ void Engine::m_initScene() {
 	m_entityManager.AddComponent<ColliderComponent>(floor, floorCollider);
 	RenderComponent floorRender{};
 	floorRender.meshID = 2;
-	floorRender.shaderID = 2;
+	floorRender.shaderID = 1;
 	floorRender.isVisible = true;
 	m_entityManager.AddComponent<RenderComponent>(floor, floorRender);
 
@@ -232,6 +232,7 @@ void Engine::m_initScene() {
 	EntityID ball = m_entityManager.CreateEntity(); // ID = 5
 	TransformComponent ballTransform{};
 	ballTransform.position = glm::vec3(0.0f, 5.0f, -3.0f);
+	ballTransform.scale = glm::vec3(0.5f);
 	m_entityManager.AddComponent<TransformComponent>(ball, ballTransform);
 	RigidBodyComponent ballRB{};
 	ballRB.mass = 2.0f;
@@ -240,7 +241,7 @@ void Engine::m_initScene() {
 	m_entityManager.AddComponent<RigidBodyComponent>(ball, ballRB);
 	ColliderComponent ballCollider{};
 	ballCollider.shape = ColliderComponent::Shape::Sphere;
-	ballCollider.size = glm::vec3(1.7f);
+	ballCollider.size = glm::vec3(0.8f);
 	m_entityManager.AddComponent<ColliderComponent>(ball, ballCollider);
 	RenderComponent ballRender{};
 	ballRender.meshID = 1;

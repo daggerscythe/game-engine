@@ -7,6 +7,7 @@ void RenderSystem::Init(int screenWidth, int screenHeight) {
 	m_screenHeight = screenHeight;
 }
 
+
 void RenderSystem::LoadModel(uint32_t id, const std::string& path) {
 	if (m_models.find(id) != m_models.end()) {
 		std::cout << "Model ID " << id << " already loaded" << std::endl;
@@ -38,6 +39,16 @@ void RenderSystem::CreateBoxModel(uint32_t id) {
 	Model* model = Model::CreateBox();
 	m_models[id] = model;
 	std::cout << "DEBUG: Created box mesh " << id << " via Model::CreateBox" << std::endl;
+}
+
+void RenderSystem::CreateBoxModel(uint32_t id, const std::string& texturePath) {
+	if (m_models.find(id) != m_models.end()) {
+		std::cout << "Mesh ID " << id << " already exists" << std::endl;
+		return;
+	}
+	Model* model = Model::CreateBox(texturePath);
+	m_models[id] = model;
+	std::cout << "DEBUG: Created textured box model " << id << " via Model::CreateBox(" << texturePath << ")" << std::endl;
 }
 
 void RenderSystem::Update(EntityManager& entityManager, float deltaTime) {
@@ -176,6 +187,20 @@ void RenderSystem::m_setLightUniforms(EntityManager& entityManager, Shader& shad
 }
 
 void RenderSystem::m_drawEntities(EntityManager& entityManager, const glm::vec3& cameraPos) {
+    // determine whether the flashlight (spot light with tag "Flashlight") is currently on
+	bool flashlightOn = false;
+	auto flashEntities = entityManager.GetEntitiesWith<LightComponent, TagComponent>();
+	for (EntityID fe : flashEntities) {
+		TagComponent& tag = entityManager.GetComponent<TagComponent>(fe);
+		if (tag.tag == "Flashlight") {
+			LightComponent& lc = entityManager.GetComponent<LightComponent>(fe);
+			if (lc.type == LightComponent::Type::Spot && lc.isOn) {
+				flashlightOn = true;
+				break;
+			}
+		}
+	}
+
 	auto entities = entityManager.GetEntitiesWith<RenderComponent, TransformComponent>();
 
 	for (EntityID entity : entities) {
@@ -206,10 +231,11 @@ void RenderSystem::m_drawEntities(EntityManager& entityManager, const glm::vec3&
 		shader.setMat4("projection", m_projection);
 		shader.setMat4("model", m_model);
 
-		// camera nad lighting globals
+        // camera nad lighting globals
 		shader.setVec3("viewPos", cameraPos);
 		shader.setFloat("shininess", 32.0f);
-		shader.setBool("flashlight", true);
+        // tell the shader whether the player's flashlight is enabled
+		shader.setBool("flashlight", flashlightOn);
 
 		// set light unifroms
 		m_setLightUniforms(entityManager, shader);

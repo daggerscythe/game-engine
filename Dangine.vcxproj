@@ -193,6 +193,12 @@
     <None Include="ModelVertexShader.glsl" />
     <None Include="LightingFragmentShader.glsl" />
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="textures\grass.jpg">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <TreatOutputAsContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</TreatOutputAsContent>
+    </CopyFileToFolders>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

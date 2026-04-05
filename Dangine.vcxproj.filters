@@ -93,4 +93,9 @@
     <None Include="ModelVertexShader.glsl" />
     <None Include="ModelFragmentShader.glsl" />
   </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="textures\grass.jpg">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+  </ItemGroup>
 </Project>
