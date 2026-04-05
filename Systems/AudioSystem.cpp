@@ -25,7 +25,7 @@ void AudioSystem::Init()
 	}
 	 
 	// set volume 
-	m_volume = 0.05f;
+	m_volume = 0.5f;
 
 	// trying to see if this fixes spatial audio issue
 	alCall(alDistanceModel, AL_LINEAR_DISTANCE_CLAMPED);

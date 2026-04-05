@@ -23,11 +23,7 @@ void InputSystem::Update(EntityManager& entityManager, float deltaTime) {
 		input.moveRight = glfwGetKey(m_window, GLFW_KEY_D) == GLFW_PRESS;
 
 		// SPACE - JUMP
-		if (glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-			std::cout << "DEBUG: Space pressed" << std::endl;
-			input.jumpRequested = true;
-		}
-		//input.jumpRequested = glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS;
+		input.jumpRequested = glfwGetKey(m_window, GLFW_KEY_SPACE) == GLFW_PRESS;
 
 		// R - SPAWNPOINT RESET
 		if (glfwGetKey(m_window, GLFW_KEY_R) == GLFW_PRESS) {

@@ -205,7 +205,7 @@ void Engine::m_initScene() {
 	RigidBodyComponent playerRB{};
 	playerRB.mass = 1.0f;
 	playerRB.isStatic = false;
-	playerRB.restitution = 0.5f;
+	playerRB.restitution = 0.0f;
 	m_entityManager.AddComponent<RigidBodyComponent>(player, playerRB);
 	//m_entityManager.AddComponent<ColliderComponent>(player, ColliderComponent{});
 	ColliderComponent playerCollider{};

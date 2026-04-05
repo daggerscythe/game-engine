@@ -59,27 +59,24 @@ void CollisionSystem::Update(EntityManager& entityManager) {
 			RigidBodyComponent& rbcB = bHasRB ? entityManager.GetComponent<RigidBodyComponent>(b) : staticRB;
 
 			// DEBUG
-			std::cout << "DEBUG: Resolving collision between " << entities[i] << " and " << entities[j] << std::endl;
+			//std::cout << "DEBUG: Resolving collision between " << entities[i] << " and " << entities[j] << std::endl;
 			m_resolveCollision(rbcA, tcA, rbcB, tcB, info);
 
-			// determine which body is contacting the ground based on the collision normal
-			// info.normal points from A -> B
+			// determine which body is contacting the ground
 			const float groundNormalThreshold = 0.7071f; // cos(45deg)
-			if (entityManager.HasComponent<RigidBodyComponent>(a) && !rbcA.isStatic) {
-				// if normal points up - A is ground, ignore
-				if (info.normal.y < -groundNormalThreshold) {
-					// normal points down - A above B
-					auto &rb = entityManager.GetComponent<RigidBodyComponent>(a);
-					rb.groundContactCount++;
-				}
-			}
-			if (entityManager.HasComponent<RigidBodyComponent>(b) && !rbcB.isStatic) {
-				if (info.normal.y > groundNormalThreshold) {
-					// normal points up - B above A
+			if (tcB.position.y > tcA.position.y) {
+				// B is above A
+				if (info.normal.y > groundNormalThreshold && entityManager.HasComponent<RigidBodyComponent>(b) && !rbcB.isStatic) {
 					auto &rb = entityManager.GetComponent<RigidBodyComponent>(b);
 					rb.groundContactCount++;
 				}
-				// if normal points down - B is ground, ignore
+			}
+			else if (tcA.position.y > tcB.position.y) {
+				// A is above B
+				if (info.normal.y < -groundNormalThreshold && entityManager.HasComponent<RigidBodyComponent>(a) && !rbcA.isStatic) {
+					auto &rb = entityManager.GetComponent<RigidBodyComponent>(a);
+					rb.groundContactCount++;
+				}
 			}
 
             // record this collision pair in current set (normalize ordering)
@@ -122,18 +119,19 @@ CollisionInfo CollisionSystem::m_testAABBvsAABB(const TransformComponent& tcA, c
 	float overlapY = std::min(maxA.y, maxB.y) - std::max(minA.y, minB.y);
 	float overlapZ = std::min(maxA.z, maxB.z) - std::max(minA.z, minB.z);
 
+	// normal should point from A -> B
 	// resolve along axis of least penetration
 	if (overlapX < overlapY && overlapX < overlapZ) {
 		info.penetration = overlapX;
-		info.normal = (tcA.position.x < tcB.position.x) ? glm::vec3(-1, 0, 0) : glm::vec3(1, 0, 0);
+		info.normal = (tcA.position.x < tcB.position.x) ? glm::vec3(1, 0, 0) : glm::vec3(-1, 0, 0);
 	}
 	else if (overlapY < overlapZ) {
 		info.penetration = overlapY;
-		info.normal = (tcA.position.y < tcB.position.y) ? glm::vec3(0, -1, 0) : glm::vec3(0, 1, 0);
+		info.normal = (tcA.position.y < tcB.position.y) ? glm::vec3(0, 1, 0) : glm::vec3(0, -1, 0);
 	}
 	else {
 		info.penetration = overlapZ;
-		info.normal = (tcA.position.z < tcB.position.z) ? glm::vec3(0, 0, -1) : glm::vec3(0, 0, 1);
+		info.normal = (tcA.position.z < tcB.position.z) ? glm::vec3(0, 0, 1) : glm::vec3(0, 0, -1);
 	}
 
 	info.colliding = true;
@@ -148,7 +146,7 @@ CollisionInfo CollisionSystem::m_testSphereVsSphere(const TransformComponent& tc
 	float radiusA = ccA.size.x;
 	float radiusB = ccB.size.x;
 
-	glm::vec3 diff = centerA - centerB;
+	glm::vec3 diff = centerB - centerA;
 	float distance = glm::length(diff);
 	float radiusSum = radiusA + radiusB;
 
@@ -156,7 +154,7 @@ CollisionInfo CollisionSystem::m_testSphereVsSphere(const TransformComponent& tc
 	if (distance >= radiusSum) return info;
 
 	// they do overlap
-	info.colliding = true;
+    info.colliding = true;
 	info.penetration = radiusSum - distance;
 	info.normal = distance > 0.0001f ? glm::normalize(diff) : glm::vec3(0, 1, 0);
 
@@ -175,13 +173,13 @@ CollisionInfo CollisionSystem::m_testSphereVsAABB(const TransformComponent& tcSp
 	// find closest AABB point to sphere's center
 	glm::vec3 closest = glm::clamp(center, aabbMin, aabbMax);
 
-	glm::vec3 diff = center - closest;
+	glm::vec3 diff = closest - center;
 	float distance = glm::length(diff);
 
 	// no overlap
 	if (distance >= radius) return info;
 
-	// they do overlap
+    // they do overlap
 	info.colliding = true;
 	info.penetration = radius - distance;
 	info.normal = distance > 0.0001f ? glm::normalize(diff) : glm::vec3(0, 1, 0);
@@ -190,10 +188,6 @@ CollisionInfo CollisionSystem::m_testSphereVsAABB(const TransformComponent& tcSp
 }
 
 void CollisionSystem::m_resolveCollision(RigidBodyComponent& rbcA, TransformComponent& tcA, RigidBodyComponent& rbcB, TransformComponent& tcB, CollisionInfo info) {
-	// ensure normal points from A(floor) up toward B(ball)
-	if (info.normal.y < 0 && tcB.position.y > tcA.position.y)
-		info.normal = -info.normal;
-	
 	// inverse masses, static objects have infinite mass = 0 inverse
 	float invMassA = rbcA.isStatic ? 0.0f : 1.0f / rbcA.mass;
 	float invMassB = rbcB.isStatic ? 0.0f : 1.0f / rbcB.mass;

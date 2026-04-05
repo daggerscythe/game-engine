@@ -12,11 +12,6 @@ void PhysicsSystem::Update(EntityManager& entityManager, float deltaTime) {
 		// skip static objects
 		if (rbc.isStatic) continue;
 
-		// DEBUG
-		//if (entity == 4) { // player
-		//	std::cout << "DEBUG: player has " << rbc.groundContactCount << " ground contact points" << std::endl;
-		//}
-
         // check for jumps
 		if (entityManager.HasComponent<InputComponent>(entity)) {
 			InputComponent& input = entityManager.GetComponent<InputComponent>(entity);
